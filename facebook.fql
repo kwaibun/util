@@ -1,0 +1,169 @@
+User
+
+home -- newsfeed
+
+feed
+    -post  (create, read)
+    -links (create)
+    -status message
+
+###################
+
+
+*stream_filter
+    **uid
+    **filter_key
+    *name
+    *type
+        -newsfeed
+        -friendlist
+        -application
+
+SELECT filter_key, name, type FROM stream_filter WHERE uid=me()
+
+
+*connection
+    **source_id
+    *target_id
+    *is_following
+    *target_type
+        -user
+        -page
+
+SELECT source_id, target_id, target_type, is_following from connection WHERE source_id = me()
+
+*friend
+    **uid1
+    **uid2
+
+SELECT uid2 FROM friend WHERE uid1 = me()
+
+*friendlist
+    **owner
+    **flid
+    *name
+    *type
+        -? close_friends
+        -? acquaintances
+        -? restricted : You can add these folks to your Restricted list and they will only see your Public posts.
+        - user_created
+        - education
+        - work
+        - current_city
+        - family
+
+SELECT flid, owner, name FROM friendlist WHERE owner=me()
+
+1) https://blog.facebook.com/blog.php?post=10150278932602131
+Unlike your smart lists for your work, school, family and city, we don't create Close Friends and Acquaintances lists for you. Since these types of relationships are unique, it's important for you to decide who goes in your Close Friends, Acquaintances or Restricted lists -- if you use them at all.
+2) http://www.bluelinerny.com/blog/tips-on-new-facebook-friends-list-feature-and-redefining-friend-or-fan-types.php
+
+*friendlist_member
+    **flid
+    *uid
+
+{
+    'fl':'SELECT flid, name FROM friendlist WHERE owner=me()',
+    'uids': 'SELECT uid, flid FROM friendlist_member WHERE flid IN (SELECT flid FROM #fl)',
+    'profile':'SELECT id, name, pic_big FROM profile WHERE id IN (SELECT uid FROM #uids)'
+}
+
+Important: You cannot expose this information to anyone but the logged-in user, as it is private and to do so would break our Platform Policies
+You cannot use a user’s friend list outside of your application, even if a user consents to such use, but you can use connections between users who have both connected to your application.
+https://developers.facebook.com/policy/#policies
+
+
+
+自己的post
+SELECT post_id, actor_id, target_id, message FROM stream WHERE source_id = me()  LIMIT 50
+
+SELECT post_id, filter_key, updated_time, source_id, actor_id, message, type FROM stream WHERE filter_key in (SELECT filter_key from stream_filter WHERE uid=me() and type='friendlist')
+
+SELECT post_id, filter_key, updated_time, message, description, type FROM stream WHERE (filter_key = 'newsfeed' AND type=398) OR (filter_key = 'page' AND type=422) AND updated_time >= 1349593788 LIMIT 100
+
+SELECT post_id, filter_key, updated_time, message, description, type FROM stream WHERE filter_key in (SELECT filter_key from stream_filter WHERE uid=me()) AND (type=398 OR type=422) AND updated_time >= 1349593788 LIMIT 100
+
+
+# stream table
+SELECT post_id, filter_key, updated_time, source_id, actor_id, target_id, message, type, description, comments FROM stream WHERE filter_key in (SELECT filter_key from stream_filter WHERE uid=me() AND type='friendlist') AND updated_time >=  1349598455 LIMIT 100
+
+SELECT post_id, filter_key, updated_time, source_id, actor_id, target_id, message, type, description, comments FROM stream WHERE filter_key = 'newsfeed' AND actor_id IN (SELECT target_id FROM connection WHERE source_id = me() AND target_type = 'user' AND target_id != me()) AND updated_time >=  1349598455 LIMIT 100
+
+#####################################################
+home
+
+This connection corresponds to the News Feed. See the feed connection for information on how to create and delete objects that show up in the News Feed.
+
+You can retrieve the News Feed filtered by user's stream filters:
+
+friend lists
+applications: For example, to retrive your News Feed filtered by photos GET me/home?filter=app_2305272732
+networks
+the home page stream (News Feed, this is the default view)
+To retrieve a user's stream filters, you will need to access the the stream_filter table.
+
+You can retrieve only posts with a location attached by adding with=location to the URL parameters:
+
+https://graph.facebook.com/me/home?with=location
+#####################################################
+
+feed
+
+This connection corresponds to the user's Wall. You can create a link, post or status message by issuing an HTTP POST request to the PROFILE_ID/feed connection. To see more details please see links, posts, and status messages documentation.
+
+When retrieving Wall posts, you can get only those Post objects with a location attached by adding with=location to the URL parameters:
+
+https://graph.facebook.com/me/feed?with=location
+
+#####################################################
+
+posts
+
+Read
+
+You can read Post published by a user by issuing an HTTP GET to /USER_ID/posts. This will return an array of Post objects:
+
+https://graph.facebook.com/me/posts
+
+You can retrieve only posts with a location attached by adding with=location to the URL parameters:
+
+https://graph.facebook.com/me/posts?with=location
+
+#####################################################
+
+posts   
+The user's own posts.
+Any valid access_token or read_stream to see non-public posts.
+array of Post objects.
+
+home    
+The user's news feed.
+read_stream.
+array of Post objects containing (up to) the last 25 posts.
+
+friends 
+The user's friends.
+Any valid access_token of the current session user.
+array of objects containing friend id and name fields.
+
+friendlists    
+The user's friend lists.
+read_friendlists.
+array of objects containing id and name fields of the friendlist.
+
+            fql_query = """SELECT post_id, filter_key, created_time, updated_time, source_id, actor_id, target_id, message, type, description, comments 
+                            FROM stream 
+                            WHERE filter_key in 
+                                (SELECT filter_key from stream_filter WHERE uid=me() AND type='newsfeed') 
+                                AND actor_id IN 
+                                    (SELECT uid2 FROM friend WHERE uid1 = me()) 
+                                AND updated_time >=  %d 
+                                AND created_time >= %d LIMIT %d""" %( thres_timestamp, created_thres_timestamp, limit)
+
+            fql_query = """SELECT post_id, filter_key, created_time, updated_time, source_id, actor_id, target_id, message, type, description, comments 
+                            FROM stream 
+                            WHERE source_id in (SELECT uid2 FROM friend WHERE uid1 = me()) 
+                            AND updated_time >=  %d 
+                            AND created_time >= %d LIMIT %d""" %( thres_timestamp, created_thres_timestamp, limit)
+
+
