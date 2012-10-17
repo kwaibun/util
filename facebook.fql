@@ -18,6 +18,7 @@ feed
         -newsfeed
         -friendlist
         -application
+        -public_profiles
 
 SELECT filter_key, name, type FROM stream_filter WHERE uid=me()
 
@@ -89,6 +90,77 @@ SELECT post_id, filter_key, updated_time, source_id, actor_id, target_id, messag
 
 SELECT post_id, filter_key, updated_time, source_id, actor_id, target_id, message, type, description, comments FROM stream WHERE filter_key = 'newsfeed' AND actor_id IN (SELECT target_id FROM connection WHERE source_id = me() AND target_type = 'user' AND target_id != me()) AND updated_time >=  1349598455 LIMIT 100
 
+############################################################################
+*** one post can have different filter_key
+{
+    "post_id": "193742123995472_292661190842802", 
+        "filter_key": "pp", 
+        "type": 80, 
+        "updated_time": 1350375651, 
+        "message": "Will we finally find out how much Surface costs today?", 
+        "description": null
+}, 
+{
+    "post_id": "193742123995472_292661190842802", 
+    "filter_key": "app_2309869772", 
+    "type": 80, 
+    "updated_time": 1350375651, 
+    "message": "Will we finally find out how much Surface costs today?", 
+    "description": null
+}, 
+{
+    "post_id": "193742123995472_292661190842802", 
+    "filter_key": "app_2915120374", 
+    "type": 80, 
+    "updated_time": 1350375651, 
+    "message": "Will we finally find out how much Surface costs today?", 
+    "description": null
+}, 
+{
+    "post_id": "193742123995472_292661190842802", 
+    "filter_key": "nf", 
+    "type": 80, 
+    "updated_time": 1350375651, 
+    "message": "Will we finally find out how much Surface costs today?", 
+    "description": null
+}, 
+############################################################################
+{
+    "post_id": "286893159420_10151205663674421", 
+    "filter_key": "pp", 
+    "type": 247, 
+    "attachment": {
+        "media": [
+        {
+            "href": "https://www.facebook.com/photo.php?fbid=10151205663639421&set=a.10150245610459421.336770.286893159420&type=1&relevant_count=1", 
+            "alt": "Are you a photo hound? Use the slick and simple interface of Photo Mage to apply filters and captions to your photos. http://facebook.appstore.com/8M5", 
+            "type": "photo", 
+            "src": "https://fbcdn-photos-a.akamaihd.net/hphotos-ak-ash3/560751_10151205663639421_619967709_s.jpg", 
+            "photo": {
+                "aid": "286893159420_336770", 
+                "pid": "286893159420_10690533", 
+                "fbid": "10151205663639421", 
+                "owner": 286893159420, 
+                "index": 630, 
+                "width": 640, 
+                "height": 1136
+            }
+        }
+        ], 
+            "name": "", 
+            "caption": "", 
+            "description": "", 
+            "properties": [
+                ], 
+            "icon": "https://s-static.ak.facebook.com/rsrc.php/v2/yz/r/StEh3RhPvjk.gif", 
+            "fb_object_type": "photo", 
+            "fb_object_id": "286893159420_10690533"
+    }, 
+    "updated_time": 1350356331, 
+    "message": "Are you a photo hound? Use the slick and simple interface of Photo Mage to apply filters and captions to your photos. http://facebook.appstore.com/8M5", 
+    "description": null
+}, 
+############################################################################
 #####################################################
 home
 
@@ -167,3 +239,11 @@ array of objects containing id and name fields of the friendlist.
                             AND created_time >= %d LIMIT %d""" %( thres_timestamp, created_thres_timestamp, limit)
 
 
+
+###################################################
+type    description                     sample
+60      change profile picture
+65      tagged in xxx's photo
+80      link posted                     1638163764_163740597100088
+247     photo posted                    100000394929454_477239738965853
+373     update cover photo              
