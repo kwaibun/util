@@ -4,7 +4,7 @@ import pprint
 
 graph = facebook.GraphAPI('BAADj6uZBY8NIBAF8zTZCiuAtycvgzh5XRDZBDYNEltgm4TedgfBXgJrekGZC0rzblExsuFZAeZB255l8VHK2j815v3QL069k1vqx1KWWYBtPAJd5rL5puoHMRqLQH0mpIZD')
 fql = """
-SELECT post_id, filter_key, type,attachment, updated_time, message, description, type, likes, comments
+SELECT post_id, filter_key, type, attachment, updated_time, message, description, likes, comments
 FROM stream 
 WHERE source_id IN 
     (SELECT uid2 FROM friend WHERE uid1 = me())
@@ -20,6 +20,9 @@ for item in data:
     print 'type: ', item['type']
     #d = graph.get_object(item['post_id'])
     #pprint.pprint(d)
-    pprint.pprint(item)
+    fbid = item['attachment']['media'][0]['photo']['fbid']
+    print fbid
+    #pprint.pprint(item['attachment'])
+    #pprint.pprint(item)
     print '#'*30
 
